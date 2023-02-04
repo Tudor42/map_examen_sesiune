@@ -2,12 +2,14 @@ package com.main.map_examen_sesiune.ORM.classparser;
 
 import com.main.map_examen_sesiune.ORM.annotations.columntype.EnumType;
 import com.main.map_examen_sesiune.ORM.annotations.columntype.Enumerated;
+import com.main.map_examen_sesiune.ORM.annotations.columntype.PrimaryKey;
 import com.main.map_examen_sesiune.ORM.exceptions.NullObjectException;
 import com.main.map_examen_sesiune.ORM.exceptions.OrmException;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class FieldsParser {
     public static ArrayList<Field> getAllFields(Class<?> cl){
@@ -28,7 +30,7 @@ public class FieldsParser {
             f.setAccessible(true);
             if(f.getAnnotation(Enumerated.class)!= null){
                 if(f.getAnnotation(Enumerated.class).type() == EnumType.STRING){
-                    res.add("'" + f.get(obj) + "'");
+                    res.add(f.get(obj).toString());
                 }else if(f.getAnnotation(Enumerated.class).type() == EnumType.INT){
                     res.add(((EnumType)f.get(obj)).ordinal());
                 }else{
@@ -43,5 +45,10 @@ public class FieldsParser {
     }
     private static boolean checkClass(Class<?> cl){
         return !(cl == null || cl.getSimpleName().equals("Object"));
+    }
+    public static ArrayList<Field> getPkFields(Class<?> cl){
+        return getAllFields(cl).stream().
+                filter(x -> x.getAnnotation(PrimaryKey.class) != null).
+                collect(Collectors.toCollection(ArrayList::new));
     }
 }

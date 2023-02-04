@@ -4,7 +4,12 @@ import com.main.map_examen_sesiune.ORM.exceptions.OrmException;
 import com.main.map_examen_sesiune.ORM.objectmapping.ObjectResultSetConverter;
 
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ConnectionManager {
     private String url;
@@ -69,24 +74,71 @@ public class ConnectionManager {
         }
     }
 
-    public ArrayList<Object> executeQuerySql(String query, Class<?> cl) throws OrmException,
+    public ArrayList<Object> executeQuerySql(HashMap<Integer, Object> query, Class<?> cl) throws OrmException,
             SQLException, IllegalAccessException {
         ArrayList<Object> objects = new ArrayList<>();
         try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement(query);
-            ResultSet res = statement.executeQuery()){
-            while(res.next()){
-                objects.add(ObjectResultSetConverter.convert(res, cl));
+            PreparedStatement statement = connection.prepareStatement((String) query.get(0))){
+            query.remove(0);
+            completePlaceHolders(query, statement);
+            try(ResultSet res = statement.executeQuery()){
+                while(res.next()){
+                    objects.add(ObjectResultSetConverter.convert(res, cl));
+                }
             }
         }
         return objects;
     }
 
-    public void executeUpdateSql(String sql) throws SQLException {
+    public void executeUpdateSql(HashMap<Integer, Object> query) throws SQLException {
         try(Connection connection = DriverManager.getConnection(url, username, password);
-            PreparedStatement statement = connection.prepareStatement(sql))
+            PreparedStatement statement = connection.prepareStatement((String)query.get(0)))
         {
+            query.remove(0);
+            completePlaceHolders(query, statement);
             statement.executeUpdate();
+        }
+    }
+
+    private static void completePlaceHolders(HashMap<Integer, Object> query, PreparedStatement statement) throws SQLException {
+        for(Map.Entry<Integer, Object> f: query.entrySet()){
+            if(f.getValue().getClass() == String.class){
+                statement.setString(f.getKey(), (String) f.getValue());
+                continue;
+            }
+            if(f.getValue().getClass() == LocalDate.class){
+                statement.setDate(f.getKey(), Date.valueOf((LocalDate) f.getValue()));
+                continue;
+
+            }
+            if(f.getValue().getClass() == Integer.class){
+                statement.setInt(f.getKey(),(Integer) f.getValue());
+                continue;
+
+            }
+            if(f.getValue().getClass() == Float.class){
+                statement.setFloat(f.getKey(), (Float) f.getValue());
+                continue;
+
+            }
+            if(f.getValue().getClass() == Boolean.class){
+                statement.setBoolean(f.getKey(), (Boolean) f.getValue());
+                continue;
+
+            }
+            if(f.getValue().getClass() == Double.class){
+                statement.setDouble(f.getKey(), (Double) f.getValue());
+                continue;
+
+            }
+            if(f.getValue().getClass() == LocalDateTime.class){
+                statement.setTimestamp(f.getKey(), Timestamp.valueOf((LocalDateTime) f.getValue()));
+                continue;
+
+            }
+            if(f.getValue().getClass() == LocalTime.class){
+                statement.setTime(f.getKey(), Time.valueOf((LocalTime) f.getValue()));
+            }
         }
     }
 

@@ -13,37 +13,32 @@ import java.time.LocalDateTime;
 public class GUI extends Application {
     public Stage stage;
 
-    enum ex{
-        RED,
-        BLACK,
-        WHITE
-    }
     @Override
     public void start(Stage stage){
-        ex e=ex.BLACK;
-        System.out.println(e.ordinal());
         try{
             ConnectionManager cn = new ConnectionManager("testdatabase",
                     "postgres", "postgres", "5432");
             ORM orm = new ORM(true,cn, TestEntity1.class, TestEntity2.class, TestEntity3.class);
+            orm.insertEntity(new TestEntity2(-1, LocalDateTime.now()));
             orm.insertEntity(new TestEntity2(-1, LocalDateTime.now()));
             orm.insertEntity(new TestEntity3(-1, 1, false));
             orm.insertEntity(new TestEntity3(-1, 1, true));
             orm.insertEntity(new TestEntity3(-1, 1, true));
             for(Object obj: orm.getEntitiesWithProps(new TestEntity3())){
                 TestEntity3 t = (TestEntity3) obj;
-                System.out.println(""+ t.getId()+ " " + t.getFkTestEntity1());
+                System.out.println(""+ t.getId()+ " " + t.getFkTestEntity1()+" "+t.isColumn1());
             }
-
+            orm.deleteEntity(new TestEntity3(2, -1, false));
+            orm.updateEntity(new TestEntity3(3, 2, false), "fkTestEntity1", "column1");
+            System.out.println("DELETED");
+            for(Object obj: orm.getEntitiesWithProps(new TestEntity3())){
+                TestEntity3 t = (TestEntity3) obj;
+                System.out.println(""+ t.getId()+ " " + t.getFkTestEntity1()+" "+t.isColumn1());
+            }
         }
         catch (Exception ex){
             System.out.println(ex.getMessage());
         }
-        // TODO
-        /*
-        Test GetEntityScript
-         */
-
     }
 
     public static void main(String [] args){

@@ -1,11 +1,10 @@
 package com.main.map_examen_sesiune.ORM;
 
 import com.main.map_examen_sesiune.ORM.annotations.columntype.ForeignKey;
+import com.main.map_examen_sesiune.ORM.annotations.columntype.PrimaryKey;
 import com.main.map_examen_sesiune.ORM.classparser.FieldsParser;
 import com.main.map_examen_sesiune.ORM.exceptions.*;
-import com.main.map_examen_sesiune.ORM.sql.CreateTableWriter;
-import com.main.map_examen_sesiune.ORM.sql.GetEntityScript;
-import com.main.map_examen_sesiune.ORM.sql.InsertEntityScript;
+import com.main.map_examen_sesiune.ORM.sql.*;
 
 import java.lang.reflect.Field;
 import java.sql.SQLException;
@@ -90,7 +89,9 @@ public class ORM {
                 script.append("DROP TABLE ").append(classList.get(i).getSimpleName()).append(";\n");
             }
         }
-        connManager.executeUpdateSql(script.toString());
+        HashMap<Integer, Object> param = new HashMap<>();
+        param.put(0, script.toString());
+        connManager.executeUpdateSql(param);
     }
 
     private void createTables() throws SQLException, TypeConversionFailedException, ClassFieldException {
@@ -100,8 +101,9 @@ public class ORM {
                 script.append(CreateTableWriter.getScript(cl)).append(";\n");
             }
         }
-        System.out.println(script);
-        connManager.executeUpdateSql(script.toString());
+        HashMap<Integer, Object> param = new HashMap<>();
+        param.put(0, script.toString());
+        connManager.executeUpdateSql(param);
     }
 
     public void insertEntity(Object obj) throws SQLException, OrmException, IllegalAccessException {
@@ -112,14 +114,37 @@ public class ORM {
         connManager.executeUpdateSql(InsertEntityScript.getScript(obj));
     }
 
-    public Object getEntityByPk(Object obj) throws Exception {
+    public void deleteEntity(Object obj) throws SQLException, OrmException, IllegalAccessException {
         if(!connManager.checkTableExists(obj.getClass().getSimpleName().toLowerCase())){
             throw new ClassToTableMappingException("MappingError: Entity provided to insert" +
                     " entity is not a part of database");
         }
-        ArrayList<Object> objs = connManager.executeQuerySql(GetEntityScript.getEntityScript(obj), obj.getClass());
-        if(objs.isEmpty()) return null;
-        return objs.get(0);
+        connManager.executeUpdateSql(DeleteEntityScript.getScript(obj));
+    }
+
+    public void updateEntity(Object obj, String... fields) throws OrmException,
+            SQLException, IllegalAccessException {
+        if(!connManager.checkTableExists(obj.getClass().getSimpleName().toLowerCase())){
+            throw new ClassToTableMappingException("MappingError(Update): Entity's class" +
+                    " is not a part of database");
+        }
+        ArrayList<Field> f = new ArrayList<>();
+        {
+            ArrayList<Field> tmp = FieldsParser.getAllFields(obj.getClass());
+            for(String fs:Arrays.stream(fields).collect(Collectors.toCollection(ArrayList::new))){
+                try{
+                    f.add(tmp.stream().
+                            filter(x-> x.getName().equalsIgnoreCase(fs)
+                                    && x.getAnnotation(PrimaryKey.class)==null).toList().get(0));
+                }catch (IndexOutOfBoundsException e){
+                    throw new ClassFieldException("field " + fs +
+                            " provided to getEntitiesWithProps doesnt exist in class or is a primary" +
+                            " key that can't be modified" +
+                            obj.getClass().getSimpleName());
+                }
+            }
+        }
+        connManager.executeUpdateSql(UpdateEntityScript.getUpdateScript(obj, f));
     }
 
     public ArrayList<Object> getEntitiesWithProps(Object props, String... fields) throws OrmException,
@@ -145,4 +170,13 @@ public class ORM {
         return connManager.executeQuerySql(GetEntityScript.getEntitiesScript(props, f), props.getClass());
     }
 
+    public Object getEntityByPk(Object obj) throws Exception {
+        if(!connManager.checkTableExists(obj.getClass().getSimpleName().toLowerCase())){
+            throw new ClassToTableMappingException("MappingError(Insert): Entity's class" +
+                    " is not a part of database");
+        }
+        ArrayList<Object> objs = connManager.executeQuerySql(GetEntityScript.getEntityScript(obj), obj.getClass());
+        if(objs.isEmpty()) return null;
+        return objs.get(0);
+    }
 }

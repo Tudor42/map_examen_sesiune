@@ -23,6 +23,8 @@ public class TypeConvertorJavaSQL {
         dict.put("LocalDate", "DATE");
         dict.put("LocalTime", "TIME");
     }
+
+
     public static String getSQLType(String javaType) throws TypeConversionFailedException {
         if(dict == null)
             init();
