@@ -4,8 +4,10 @@ import com.main.map_examen_sesiune.ORM.annotations.columntype.ForeignKey;
 import com.main.map_examen_sesiune.ORM.classparser.FieldsParser;
 import com.main.map_examen_sesiune.ORM.exceptions.*;
 import com.main.map_examen_sesiune.ORM.sql.CreateTableWriter;
+import com.main.map_examen_sesiune.ORM.sql.GetEntityScript;
 import com.main.map_examen_sesiune.ORM.sql.InsertEntityScript;
 
+import java.lang.reflect.Field;
 import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -13,7 +15,6 @@ import java.util.stream.Collectors;
 public class ORM {
     private final ConnectionManager connManager;
     private List<Class<?>> classList;
-
 
     public ORM(ConnectionManager conn, Class<?>... classes) throws TypeConversionFailedException,
             SQLException, ForeignKeyException {
@@ -108,6 +109,39 @@ public class ORM {
                     " entity is not a part of database");
         }
         connManager.executeUpdateSql(InsertEntityScript.getScript(obj));
+    }
+
+    public Object getEntityByPk(Object obj) throws Exception {
+        if(!connManager.checkTableExists(obj.getClass().getSimpleName().toLowerCase())){
+            throw new ClassToTableMappingException("MappingError: Entity provided to insert" +
+                    " entity is not a part of database");
+        }
+        ArrayList<Object> objs = connManager.executeQuerySql(GetEntityScript.getEntityScript(obj), obj.getClass());
+        if(objs.isEmpty()) return null;
+        return objs.get(0);
+    }
+
+    public ArrayList<Object> getEntitiesWithProps(Object props, String... fields) throws OrmException,
+            SQLException, IllegalAccessException {
+        if(!connManager.checkTableExists(props.getClass().getSimpleName().toLowerCase())){
+            throw new ClassToTableMappingException("MappingError: Entity provided to insert" +
+                    " entity is not a part of database");
+        }
+        ArrayList<Field> f = new ArrayList<>();
+        {
+            ArrayList<Field> tmp = FieldsParser.getAllFields(props.getClass());
+            for(String fs:Arrays.stream(fields).collect(Collectors.toCollection(ArrayList::new))){
+                try{
+                    f.add(tmp.stream().
+                            filter(x-> x.getName().equalsIgnoreCase(fs)).toList().get(0));
+                }catch (IndexOutOfBoundsException e){
+                    throw new ClassFieldException("field " + fs +
+                            " provided to getEntitiesWithProps doesnt exist in class " +
+                            props.getClass().getSimpleName());
+                }
+            }
+        }
+        return connManager.executeQuerySql(GetEntityScript.getEntitiesScript(props, f), props.getClass());
     }
 
 }

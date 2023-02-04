@@ -35,6 +35,7 @@ public class InsertEntityScript {
             }
             if(o.getClass().equals(String.class)){
                 script.append("'").append(o).append("', ");
+                continue;
             }
             script.append(o).append(", ");
         }

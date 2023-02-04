@@ -1,6 +1,10 @@
 package com.main.map_examen_sesiune.ORM;
 
+import com.main.map_examen_sesiune.ORM.exceptions.OrmException;
+import com.main.map_examen_sesiune.ORM.objectmapping.ObjectResultSetConverter;
+
 import java.sql.*;
+import java.util.ArrayList;
 
 public class ConnectionManager {
     private String url;
@@ -45,7 +49,7 @@ public class ConnectionManager {
         System.out.println("Creating database  " + database);
         try (Connection connection = DriverManager.getConnection("jdbc:postgresql://localhost:"+this.port+"/postgres",
                 this.username, this.password);
-            Statement statement = connection.createStatement();
+            Statement statement = connection.createStatement()
         ){
             statement.executeUpdate("CREATE DATABASE " + database);
             System.out.println("Database created successfully.");
@@ -65,12 +69,17 @@ public class ConnectionManager {
         }
     }
 
-    public ResultSet executeQuerySql(String query) throws SQLException {
+    public ArrayList<Object> executeQuerySql(String query, Class<?> cl) throws OrmException,
+            SQLException, IllegalAccessException {
+        ArrayList<Object> objects = new ArrayList<>();
         try(Connection connection = DriverManager.getConnection(url, username, password);
-            Statement statement = connection.createStatement();
-        ){
-            return statement.executeQuery(query);
+            PreparedStatement statement = connection.prepareStatement(query);
+            ResultSet res = statement.executeQuery()){
+            while(res.next()){
+                objects.add(ObjectResultSetConverter.convert(res, cl));
+            }
         }
+        return objects;
     }
 
     public void executeUpdateSql(String sql) throws SQLException {

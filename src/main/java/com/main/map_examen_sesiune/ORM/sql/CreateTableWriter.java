@@ -15,7 +15,7 @@ public class CreateTableWriter {
         for(Field field: FieldsParser.getAllFields(cl)){
             res.append(fieldResolve(field)).append(", ");
         }
-        return res.toString().substring(0, res.length() - 2) + ")";
+        return res.substring(0, res.length() - 2) + ")";
     }
 
     private static String primaryKey(Field field){
