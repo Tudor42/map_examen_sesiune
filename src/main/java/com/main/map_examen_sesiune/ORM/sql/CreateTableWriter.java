@@ -59,6 +59,7 @@ public class CreateTableWriter {
         return field.getName() + " " +  (type==null?TypeConvertorJavaSQL.
                 getSQLType(field.getAnnotation(Enumerated.class).type().name().toLowerCase()):type)
                 + (field.getAnnotation(NotNull.class) != null? " NOT NULL": "")
+                + (field.getAnnotation(Unique.class) != null? " UNIQUE": "")
                 + foreignKey(field);
     }
 }

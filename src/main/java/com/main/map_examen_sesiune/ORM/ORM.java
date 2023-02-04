@@ -14,7 +14,6 @@ import java.util.stream.Collectors;
 public class ORM {
     private final ConnectionManager connManager;
     private List<Class<?>> classList;
-
     public ORM(ConnectionManager conn, Class<?>... classes) throws TypeConversionFailedException,
             SQLException, ForeignKeyException, ClassFieldException {
         this.connManager = conn;
@@ -22,6 +21,7 @@ public class ORM {
         classList = partiallyOrderClasses();
         createTables();
     }
+
     public ORM(boolean dropTablesBeforeCreating, ConnectionManager conn, Class<?>... classes) throws TypeConversionFailedException,
             SQLException, ForeignKeyException, ClassFieldException {
         this.connManager = conn;
@@ -32,6 +32,7 @@ public class ORM {
         }
         createTables();
     }
+
     private boolean fkFromClass1ToClass2(Class<?> class1, Class<?> class2){
         return FieldsParser.getAllFields(class1).stream().filter(x -> {
             ForeignKey a = x.getAnnotation(ForeignKey.class);
@@ -83,15 +84,7 @@ public class ORM {
     }
 
     private void dropTables() throws SQLException {
-        StringBuilder script = new StringBuilder();
-        for(int i = classList.size()-1; i>=0; i--){
-            if(connManager.checkTableExists(classList.get(i).getSimpleName().toLowerCase())){
-                script.append("DROP TABLE ").append(classList.get(i).getSimpleName()).append(";\n");
-            }
-        }
-        HashMap<Integer, Object> param = new HashMap<>();
-        param.put(0, script.toString());
-        connManager.executeUpdateSql(param);
+        connManager.dropAllTables();
     }
 
     private void createTables() throws SQLException, TypeConversionFailedException, ClassFieldException {

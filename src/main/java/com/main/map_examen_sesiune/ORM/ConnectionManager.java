@@ -152,4 +152,16 @@ public class ConnectionManager {
             }
         }
     }
+
+    public void dropAllTables() throws SQLException {
+        try (Connection connection = DriverManager.getConnection(
+                url, username, password);
+            Statement statement = connection.createStatement();
+            ResultSet resultSet = statement.executeQuery(
+                    "SELECT tablename FROM pg_tables WHERE schemaname = 'public'")) {
+            while (resultSet.next()) {
+                statement.executeUpdate("DROP TABLE IF EXISTS " + resultSet.getString(1) + " CASCADE");
+            }
+        }
+    }
 }
