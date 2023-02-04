@@ -8,6 +8,8 @@ import com.main.map_examen_sesiune.domain.TestEntity3;
 import javafx.application.Application;
 import javafx.stage.Stage;
 
+import java.time.LocalDateTime;
+
 public class GUI extends Application {
     public Stage stage;
 
@@ -15,7 +17,9 @@ public class GUI extends Application {
     public void start(Stage stage) throws Exception {
         ConnectionManager cn = new ConnectionManager("testdatabase",
                 "postgres", "postgres", "5432");
-        try{ORM orm = new ORM(cn, TestEntity1.class, TestEntity2.class, TestEntity3.class);}
+        try{ORM orm = new ORM(cn, TestEntity1.class, TestEntity2.class, TestEntity3.class);
+        orm.insertEntity(new TestEntity2(1, LocalDateTime.now()));
+        }
         catch (Exception ex){
             System.out.println(ex.getMessage());
         }

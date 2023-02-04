@@ -2,29 +2,36 @@ package com.main.map_examen_sesiune.ORM;
 
 import com.main.map_examen_sesiune.ORM.annotations.columntype.ForeignKey;
 import com.main.map_examen_sesiune.ORM.classparser.FieldsParser;
-import com.main.map_examen_sesiune.ORM.exceptions.ForeignKeyException;
-import com.main.map_examen_sesiune.ORM.exceptions.TypeConversionFailedException;
+import com.main.map_examen_sesiune.ORM.exceptions.*;
 import com.main.map_examen_sesiune.ORM.sql.CreateTableWriter;
+import com.main.map_examen_sesiune.ORM.sql.InsertEntityScript;
 
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ORM {
     private final ConnectionManager connManager;
-    private final List<Class<?>> classList;
+    private List<Class<?>> classList;
 
 
     public ORM(ConnectionManager conn, Class<?>... classes) throws TypeConversionFailedException,
             SQLException, ForeignKeyException {
         this.connManager = conn;
         classList = Arrays.stream(classes).collect(Collectors.toList());
+        classList = partiallyOrderClasses();
         createTables();
     }
-
+    public ORM(boolean dropTablesBeforeCreating, ConnectionManager conn, Class<?>... classes) throws TypeConversionFailedException,
+            SQLException, ForeignKeyException {
+        this.connManager = conn;
+        classList = Arrays.stream(classes).collect(Collectors.toList());
+        classList = partiallyOrderClasses();
+        if(dropTablesBeforeCreating){
+            dropTables();
+        }
+        createTables();
+    }
     private boolean fkFromClass1ToClass2(Class<?> class1, Class<?> class2){
         return FieldsParser.getAllFields(class1).stream().filter(x -> {
             ForeignKey a = x.getAnnotation(ForeignKey.class);
@@ -44,7 +51,7 @@ public class ORM {
                 }
             }
         }
-        ArrayList<Class<?>> s = new ArrayList<Class<?>>(classList.stream().filter( // set of all classes with no reference to them
+        ArrayList<Class<?>> s = new ArrayList<>(classList.stream().filter( // set of all classes with no reference to them
                 x -> classList.stream().filter(
                         y-> fkFromClass1ToClass2(x, y)
                 ).toList().size() == 0
@@ -75,16 +82,32 @@ public class ORM {
         return result;
     }
 
-    private void createTables() throws ForeignKeyException, SQLException, TypeConversionFailedException {
-        // partially order the list of classes
-        List<Class<?>> partialOrderedClasses = partiallyOrderClasses();
+    private void dropTables() throws SQLException {
         StringBuilder script = new StringBuilder();
-        for(Class<?> cl: partialOrderedClasses){
-            if(!connManager.checkTableExists(cl.getName())){
-                script.append(CreateTableWriter.getScript(cl)).append("\n");
+        for(int i = classList.size()-1; i>=0; i--){
+            if(connManager.checkTableExists(classList.get(i).getSimpleName().toLowerCase())){
+                script.append("DROP TABLE ").append(classList.get(i).getSimpleName()).append(";\n");
             }
         }
-        System.out.println(script);
+        connManager.executeUpdateSql(script.toString());
+    }
+
+    private void createTables() throws SQLException, TypeConversionFailedException {
+        StringBuilder script = new StringBuilder();
+        for(Class<?> cl: classList){
+            if(!connManager.checkTableExists(cl.getSimpleName().toLowerCase())){
+                script.append(CreateTableWriter.getScript(cl)).append(";\n");
+            }
+        }
+        connManager.executeUpdateSql(script.toString());
+    }
+
+    public void insertEntity(Object obj) throws SQLException, OrmException, IllegalAccessException {
+        if(!connManager.checkTableExists(obj.getClass().getSimpleName().toLowerCase())){
+            throw new ClassToTableMappingException("MappingError: Entity provided to insert" +
+                    " entity is not a part of database");
+        }
+        connManager.executeUpdateSql(InsertEntityScript.getScript(obj));
     }
 
 }
