@@ -13,12 +13,15 @@ public class TypeConvertorJavaSQL {
         dict.put("int", "INT");
         dict.put("Integer", "INT");
         dict.put("String", "VARCHAR");
+        dict.put("string", "VARCHAR");
         dict.put("boolean", "BOOLEAN");
         dict.put("double", "DECIMAL");
         dict.put("float", "DECIMAL");
         dict.put("Double", "DECIMAL");
         dict.put("Float", "DECIMAL");
         dict.put("LocalDateTime", "TIMESTAMP");
+        dict.put("LocalDate", "DATE");
+        dict.put("LocalTime", "TIME");
     }
     public static String getSQLType(String javaType) throws TypeConversionFailedException {
         if(dict == null)

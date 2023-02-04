@@ -40,15 +40,15 @@ public class GetEntityScript {
             Object tmp = f.get(props);
             if(tmp.getClass().equals(LocalDateTime.class)) {
                 script.append("'").append(((LocalDateTime) tmp)
-                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).append("', ");
+                        .format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).append("' AND ");
             }else if(tmp.getClass().equals(String.class)){
-                script.append("'").append(tmp).append("', ");
+                script.append("'").append(tmp).append("' AND ");
             }else {
-                script.append(tmp).append(", ");
+                script.append(tmp).append(" AND ");
             }
             f.setAccessible(false);
         }
-        script.setLength(script.length()-2);
+        script.setLength(script.length()-5);
         return script.toString();
     }
 }

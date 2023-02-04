@@ -1,16 +1,14 @@
 package com.main.map_examen_sesiune.ORM.sql;
 
-import com.main.map_examen_sesiune.ORM.annotations.columntype.FkRules;
-import com.main.map_examen_sesiune.ORM.annotations.columntype.ForeignKey;
-import com.main.map_examen_sesiune.ORM.annotations.columntype.NotNull;
-import com.main.map_examen_sesiune.ORM.annotations.columntype.PrimaryKey;
+import com.main.map_examen_sesiune.ORM.annotations.columntype.*;
 import com.main.map_examen_sesiune.ORM.classparser.FieldsParser;
+import com.main.map_examen_sesiune.ORM.exceptions.ClassFieldException;
 import com.main.map_examen_sesiune.ORM.exceptions.TypeConversionFailedException;
 
 import java.lang.reflect.Field;
 
 public class CreateTableWriter {
-    public static String getScript(Class<?> cl) throws TypeConversionFailedException {
+    public static String getScript(Class<?> cl) throws TypeConversionFailedException, ClassFieldException {
         StringBuilder res = new StringBuilder("CREATE TABLE " + cl.getSimpleName() + "(");
         for(Field field: FieldsParser.getAllFields(cl)){
             res.append(fieldResolve(field)).append(", ");
@@ -39,8 +37,14 @@ public class CreateTableWriter {
                         " ON DELETE SET NULL ON UPDATE SET NULL":"");
     }
 
-    private static String fieldResolve(Field field) throws TypeConversionFailedException {
-        return field.getName() + " " +  TypeConvertorJavaSQL.getSQLType(field.getType().getSimpleName())
+    private static String fieldResolve(Field field) throws TypeConversionFailedException, ClassFieldException {
+        String type = TypeConvertorJavaSQL.getSQLType(field.getType().getSimpleName());
+        if(type==null && field.getAnnotation(Enumerated.class) == null){
+            throw new ClassFieldException("Field " + field.getName() + " may be of type enum but is not specified. " +
+                    "Please use @Enumerated annotation for this field");
+        }
+        return field.getName() + " " +  (type==null?TypeConvertorJavaSQL.
+                getSQLType(field.getAnnotation(Enumerated.class).type().name().toLowerCase()):type)
                 + primaryKey(field) +
                 (field.getAnnotation(NotNull.class) != null? " NOT NULL": "")
                 + foreignKey(field);

@@ -8,6 +8,8 @@ public class TestEntity3 extends TestBaseClass{
 
     boolean column1;
 
+
+
     public TestEntity3(){
     }
 

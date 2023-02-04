@@ -17,14 +17,14 @@ public class ORM {
     private List<Class<?>> classList;
 
     public ORM(ConnectionManager conn, Class<?>... classes) throws TypeConversionFailedException,
-            SQLException, ForeignKeyException {
+            SQLException, ForeignKeyException, ClassFieldException {
         this.connManager = conn;
         classList = Arrays.stream(classes).collect(Collectors.toList());
         classList = partiallyOrderClasses();
         createTables();
     }
     public ORM(boolean dropTablesBeforeCreating, ConnectionManager conn, Class<?>... classes) throws TypeConversionFailedException,
-            SQLException, ForeignKeyException {
+            SQLException, ForeignKeyException, ClassFieldException {
         this.connManager = conn;
         classList = Arrays.stream(classes).collect(Collectors.toList());
         classList = partiallyOrderClasses();
@@ -93,13 +93,14 @@ public class ORM {
         connManager.executeUpdateSql(script.toString());
     }
 
-    private void createTables() throws SQLException, TypeConversionFailedException {
+    private void createTables() throws SQLException, TypeConversionFailedException, ClassFieldException {
         StringBuilder script = new StringBuilder();
         for(Class<?> cl: classList){
             if(!connManager.checkTableExists(cl.getSimpleName().toLowerCase())){
                 script.append(CreateTableWriter.getScript(cl)).append(";\n");
             }
         }
+        System.out.println(script);
         connManager.executeUpdateSql(script.toString());
     }
 
