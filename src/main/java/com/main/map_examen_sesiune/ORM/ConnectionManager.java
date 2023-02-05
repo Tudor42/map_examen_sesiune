@@ -102,6 +102,10 @@ public class ConnectionManager {
 
     private static void completePlaceHolders(HashMap<Integer, Object> query, PreparedStatement statement) throws SQLException {
         for(Map.Entry<Integer, Object> f: query.entrySet()){
+            if(f.getValue() == null){
+                statement.setNull(f.getKey(), java.sql.Types.NULL);
+                continue;
+            }
             if(f.getValue().getClass() == String.class){
                 statement.setString(f.getKey(), (String) f.getValue());
                 continue;
@@ -160,7 +164,10 @@ public class ConnectionManager {
             ResultSet resultSet = statement.executeQuery(
                     "SELECT tablename FROM pg_tables WHERE schemaname = 'public'")) {
             while (resultSet.next()) {
-                statement.executeUpdate("DROP TABLE IF EXISTS " + resultSet.getString(1) + " CASCADE");
+                String tableName = resultSet.getString(1);
+                try (Statement dropStatement = connection.createStatement()) {
+                    dropStatement.executeUpdate("DROP TABLE IF EXISTS " + tableName + " CASCADE");
+                }
             }
         }
     }

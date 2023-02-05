@@ -1,5 +1,6 @@
 package com.main.map_examen_sesiune.ORM.sql;
 
+import com.main.map_examen_sesiune.ORM.annotations.columntype.NotNull;
 import com.main.map_examen_sesiune.ORM.annotations.columntype.PrimaryKey;
 import com.main.map_examen_sesiune.ORM.classparser.FieldsParser;
 import com.main.map_examen_sesiune.ORM.exceptions.OrmException;
@@ -22,6 +23,7 @@ public class InsertEntityScript {
                 }
                 continue;
             }
+
             script.append(f.getName().toLowerCase()).append(", ");
             fieldsToGet.add(f);
         }

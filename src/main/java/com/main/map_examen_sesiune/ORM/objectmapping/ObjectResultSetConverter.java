@@ -1,5 +1,7 @@
 package com.main.map_examen_sesiune.ORM.objectmapping;
 
+import com.main.map_examen_sesiune.ORM.annotations.columntype.EnumType;
+import com.main.map_examen_sesiune.ORM.annotations.columntype.Enumerated;
 import com.main.map_examen_sesiune.ORM.classparser.FieldsParser;
 import com.main.map_examen_sesiune.ORM.exceptions.ClassMethodsException;
 
@@ -7,6 +9,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Arrays;
 
 public class ObjectResultSetConverter {
     public static Object convert(ResultSet resultSet, Class<?> cl) throws ClassMethodsException, SQLException, IllegalAccessException {
@@ -18,7 +21,19 @@ public class ObjectResultSetConverter {
         }
         for(Field f: FieldsParser.getAllFields(cl)){
             f.setAccessible(true);
-            f.set(o, resultSet.getObject(f.getName().toLowerCase()));
+            if(f.getAnnotation(Enumerated.class) != null){
+                if(f.getAnnotation(Enumerated.class).type().equals(EnumType.STRING)) {
+                    String tmp_str = resultSet.getObject(f.getName().toLowerCase()).toString();
+                    Object tmp = Arrays.stream(f.getType().getEnumConstants()).
+                            filter(x-> tmp_str.equals(x.toString())).toList().get(0);
+                    f.set(o, tmp);
+                }else{
+                    Integer tmp = (Integer) resultSet.getObject(f.getName().toLowerCase());
+                    f.set(o, f.getType().getEnumConstants()[tmp]);
+                }
+            }else {
+                f.set(o, resultSet.getObject(f.getName().toLowerCase()));
+            }
             f.setAccessible(false);
         }
         return o;
