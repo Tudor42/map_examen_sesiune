@@ -10,6 +10,7 @@ import java.lang.annotation.Target;
 public @interface ForeignKey {
     Class<?> entity();
     String referencedColumn() default "id";
-
-    FkRules rule() default FkRules.NO_ACTION;
+    FkRules ruleDelete() default FkRules.NO_ACTION;
+    FkRules ruleUpdate() default FkRules.NO_ACTION;
+    boolean addFKAfter() default false;
 }

@@ -3,6 +3,8 @@ package com.main.map_examen_sesiune.ui;
 import com.main.map_examen_sesiune.ORM.ConnectionManager;
 import com.main.map_examen_sesiune.ORM.ORM;
 import com.main.map_examen_sesiune.ORM.exceptions.OrmException;
+import com.main.map_examen_sesiune.domain.DummyClass;
+import com.main.map_examen_sesiune.domain.DummyClass2;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -27,8 +29,8 @@ public class GUI extends Application {
     public static void main(String [] args){
         try{
             int i;
-            //ConnectionManager connectionManager = new ConnectionManager("testdatabase");
-            //ORM o = new ORM(connectionManager, Pacient.class, Pat.class);
+            ConnectionManager connectionManager = new ConnectionManager("testdatabase");
+            ORM o = new ORM(true, connectionManager, DummyClass2.class, DummyClass.class);
             /*for(int i = 0; i < 30; i++) {
                 o.insertEntity(new Pacient(Integer.toString(i), i, i%2==0, "diagnostic" + i, (1+i)%5));
             }

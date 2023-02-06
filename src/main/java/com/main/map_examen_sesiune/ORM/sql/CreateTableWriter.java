@@ -5,8 +5,10 @@ import com.main.map_examen_sesiune.ORM.classparser.FieldsParser;
 import com.main.map_examen_sesiune.ORM.exceptions.ClassFieldException;
 import com.main.map_examen_sesiune.ORM.exceptions.TypeConversionFailedException;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 public class CreateTableWriter {
     public static String getScript(Class<?> cl) throws TypeConversionFailedException, ClassFieldException {
@@ -38,17 +40,31 @@ public class CreateTableWriter {
         }
         return res.substring(0, res.length()-2) + ")";
     }
+
+    private static String foreignKeyString(Field field){
+        ForeignKey an = field.getAnnotation(ForeignKey.class);
+
+        return "FOREIGN KEY (" + field.getName() + ") REFERENCES " + an.entity().getSimpleName() +
+        "(" + an.referencedColumn() + ")"
+                + (an.ruleDelete() == FkRules.CASCADE?
+                " ON DELETE CASCADE ":
+                an.ruleDelete() == FkRules.SET_NULL?
+                        " ON DELETE SET NULL ":"")
+                + (an.ruleUpdate() == FkRules.CASCADE?
+                "ON UPDATE CASCADE ":
+                an.ruleUpdate() == FkRules.SET_NULL?
+                        "ON UPDATE SET NULL ":"");
+    }
+
     private static String foreignKey(Field field){
         ForeignKey an = field.getAnnotation(ForeignKey.class);
         if(an == null){
             return "";
         }
-        return ", FOREIGN KEY (" + field.getName() + ") REFERENCES " + an.entity().getSimpleName() +
-                "(" + an.referencedColumn() + ")"
-                + (an.rule() == FkRules.CASCADE?
-                " ON DELETE CASCADE ON UPDATE CASCADE":
-                an.rule() == FkRules.SET_NULL?
-                        " ON DELETE SET NULL ON UPDATE SET NULL":"");
+        if(an.addFKAfter()){
+            return "";
+        }
+        return ", " + foreignKeyString(field);
     }
     private static String fieldResolve(Field field) throws TypeConversionFailedException, ClassFieldException {
         String type = TypeConvertorJavaSQL.getSQLType(field.getType().getSimpleName());
@@ -61,5 +77,21 @@ public class CreateTableWriter {
                 + (field.getAnnotation(NotNull.class) != null? " NOT NULL": "")
                 + (field.getAnnotation(Unique.class) != null? " UNIQUE": "")
                 + foreignKey(field);
+    }
+
+    public static String addFkAfterCreation(Class<?> cl){
+        ArrayList<Field> fields = FieldsParser.getAllFields(cl).stream().
+                filter(x->{
+                    ForeignKey a = x.getAnnotation(ForeignKey.class);
+                    return a!=null && a.addFKAfter();
+                }).collect(Collectors.toCollection(ArrayList::new));
+
+        StringBuilder res = new StringBuilder();
+        for(Field f: fields) {
+            res.append("ALTER TABLE ").append(cl.getSimpleName()).
+                    append(" ADD CONSTRAINT ").append(f.getName().toLowerCase()).append("_fkConstraint ").
+                    append(foreignKeyString(f)).append("; ");
+        }
+        return res.toString();
     }
 }

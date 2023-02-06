@@ -34,9 +34,10 @@ public class ORM {
     }
 
     private boolean fkFromClass1ToClass2(Class<?> class1, Class<?> class2){
+        // it will not return true if the fk is instantiated after the table creation
         return FieldsParser.getAllFields(class1).stream().filter(x -> {
             ForeignKey a = x.getAnnotation(ForeignKey.class);
-            return a != null && a.entity() == class2;
+            return a != null && !a.addFKAfter() && a.entity() == class2;
         }).toList().size() != 0;
     }
 
@@ -94,6 +95,12 @@ public class ORM {
                 script.append(CreateTableWriter.getScript(cl)).append(";\n");
             }
         }
+        for(Class<?> cl: classList){
+            if(!connManager.checkTableExists(cl.getSimpleName().toLowerCase())){
+                script.append(CreateTableWriter.addFkAfterCreation(cl)).append("\n");
+            }
+        }
+        System.out.println(script);
         HashMap<Integer, Object> param = new HashMap<>();
         param.put(0, script.toString());
         connManager.executeUpdateSql(param);
