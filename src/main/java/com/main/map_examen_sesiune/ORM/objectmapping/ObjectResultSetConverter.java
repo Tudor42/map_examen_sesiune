@@ -7,8 +7,7 @@ import com.main.map_examen_sesiune.ORM.exceptions.ClassMethodsException;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.Arrays;
 
 public class ObjectResultSetConverter {
@@ -32,7 +31,20 @@ public class ObjectResultSetConverter {
                     f.set(o, f.getType().getEnumConstants()[tmp]);
                 }
             }else {
-                f.set(o, resultSet.getObject(f.getName().toLowerCase()));
+                Object objf = resultSet.getObject(f.getName().toLowerCase());
+                if(objf.getClass().equals(java.sql.Date.class)){
+                    f.set(o, ((Date) objf).toLocalDate());
+                    continue;
+                }
+                if(objf.getClass().equals(java.sql.Time.class)){
+                    f.set(o, ((Time) objf).toLocalTime());
+                    continue;
+                }
+                if(objf.getClass().equals(java.sql.Timestamp.class)){
+                    f.set(o, ((Timestamp)objf).toLocalDateTime());
+                    continue;
+                }
+                f.set(o, objf);
             }
             f.setAccessible(false);
         }
