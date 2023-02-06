@@ -32,6 +32,7 @@ public class ObjectResultSetConverter {
                 }
             }else {
                 Object objf = resultSet.getObject(f.getName().toLowerCase());
+                if(objf == null) continue;
                 if(objf.getClass().equals(java.sql.Date.class)){
                     f.set(o, ((Date) objf).toLocalDate());
                     continue;

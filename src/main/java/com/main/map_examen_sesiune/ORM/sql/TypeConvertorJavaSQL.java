@@ -10,6 +10,12 @@ public class TypeConvertorJavaSQL {
     static Map<String, String> dict = null;
     private static void init(){
         dict = new HashMap<>();
+        // dict.put("char", "CHAR"); type doesnt work use Character
+        dict.put("Character", "CHAR");
+        dict.put("long", "BIGINT");
+        dict.put("Long", "BIGINT");
+        dict.put("short", "SMALLINT");
+        dict.put("Short", "SMALLINT");
         dict.put("int", "INT");
         dict.put("Integer", "INT");
         dict.put("String", "VARCHAR");

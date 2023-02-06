@@ -11,6 +11,9 @@ public class UpdateEntityScript {
     public static HashMap<Integer, Object> getUpdateScript(Object obj, ArrayList<Field> fields)
             throws IllegalAccessException, OrmException {
         // Update row with obj.pk to all the fields' values of obj that are included in fields param
+        if(fields.isEmpty()){
+            throw new OrmException("No fields where specified for update");
+        }
         HashMap<Integer, Object> result = new HashMap<>();
         int nextPlaceHolderIndex = 1;
         StringBuilder script = new StringBuilder("UPDATE " + obj.getClass().getSimpleName().toLowerCase());

@@ -110,6 +110,17 @@ public class ConnectionManager {
                 statement.setString(f.getKey(), (String) f.getValue());
                 continue;
             }
+            if(f.getValue().getClass() == Long.class){
+                statement.setLong(f.getKey(), (Long) f.getValue());
+                continue;
+            }
+            if(f.getValue().getClass() == Short.class){
+                statement.setShort(f.getKey(), (Short) f.getValue());
+            }
+            if(f.getValue().getClass() == Character.class){
+                statement.setString(f.getKey(), f.getValue().toString());
+                continue;
+            }
             if(f.getValue().getClass() == LocalDate.class){
                 statement.setDate(f.getKey(), Date.valueOf((LocalDate) f.getValue()));
                 continue;

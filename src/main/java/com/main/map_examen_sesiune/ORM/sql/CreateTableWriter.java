@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 public class CreateTableWriter {
     public static String getScript(Class<?> cl) throws TypeConversionFailedException, ClassFieldException {
-        StringBuilder res = new StringBuilder("CREATE TABLE " + cl.getSimpleName() + "(");
+        StringBuilder res = new StringBuilder("CREATE TABLE IF NOT EXISTS " + cl.getSimpleName() + "(");
         ArrayList<Field> pks = FieldsParser.getPkFields(cl);
         if(pks.size() < 1 || pks.size() > 2){
             throw new ClassFieldException("For class "+cl.getSimpleName()+" the primary key is not " +

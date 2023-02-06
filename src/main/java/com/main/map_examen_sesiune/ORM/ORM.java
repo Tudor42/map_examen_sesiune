@@ -100,7 +100,6 @@ public class ORM {
                 script.append(CreateTableWriter.addFkAfterCreation(cl)).append("\n");
             }
         }
-        System.out.println(script);
         HashMap<Integer, Object> param = new HashMap<>();
         param.put(0, script.toString());
         connManager.executeUpdateSql(param);
