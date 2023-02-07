@@ -1,5 +1,6 @@
 package com.main.map_examen_sesiune.ORM;
 
+import com.main.map_examen_sesiune.ORM.annotations.TableNameAnnotation;
 import com.main.map_examen_sesiune.ORM.annotations.columntype.ForeignKey;
 import com.main.map_examen_sesiune.ORM.annotations.columntype.PrimaryKey;
 import com.main.map_examen_sesiune.ORM.classparser.FieldsParser;
@@ -91,22 +92,23 @@ public class ORM {
     private void createTables() throws SQLException, TypeConversionFailedException, ClassFieldException {
         StringBuilder script = new StringBuilder();
         for(Class<?> cl: classList){
-            if(!connManager.checkTableExists(cl.getSimpleName().toLowerCase())){
+            if(!connManager.checkTableExists(cl.getAnnotation(TableNameAnnotation.class).tableName().toLowerCase())){
                 script.append(CreateTableWriter.getScript(cl)).append(";\n");
             }
         }
         for(Class<?> cl: classList){
-            if(!connManager.checkTableExists(cl.getSimpleName().toLowerCase())){
+            if(!connManager.checkTableExists(cl.getAnnotation(TableNameAnnotation.class).tableName().toLowerCase())){
                 script.append(CreateTableWriter.addFkAfterCreation(cl)).append("\n");
             }
         }
         HashMap<Integer, Object> param = new HashMap<>();
         param.put(0, script.toString());
+        System.out.println(script);
         connManager.executeUpdateSql(param);
     }
 
     public void insertEntity(Object obj) throws SQLException, OrmException, IllegalAccessException {
-        if(!connManager.checkTableExists(obj.getClass().getSimpleName().toLowerCase())){
+        if(!connManager.checkTableExists(obj.getClass().getAnnotation(TableNameAnnotation.class).tableName().toLowerCase())){
             throw new ClassToTableMappingException("MappingError: Entity provided to insert" +
                     " entity is not a part of database");
         }
@@ -114,7 +116,7 @@ public class ORM {
     }
 
     public void deleteEntity(Object obj) throws SQLException, OrmException, IllegalAccessException {
-        if(!connManager.checkTableExists(obj.getClass().getSimpleName().toLowerCase())){
+        if(!connManager.checkTableExists(obj.getClass().getAnnotation(TableNameAnnotation.class).tableName().toLowerCase())){
             throw new ClassToTableMappingException("MappingError: Entity provided to insert" +
                     " entity is not a part of database");
         }
@@ -123,7 +125,7 @@ public class ORM {
 
     public void updateEntity(Object obj, String... fields) throws OrmException,
             SQLException, IllegalAccessException {
-        if(!connManager.checkTableExists(obj.getClass().getSimpleName().toLowerCase())){
+        if(!connManager.checkTableExists(obj.getClass().getAnnotation(TableNameAnnotation.class).tableName().toLowerCase())){
             throw new ClassToTableMappingException("MappingError(Update): Entity's class" +
                     " is not a part of database");
         }
@@ -146,9 +148,9 @@ public class ORM {
         connManager.executeUpdateSql(UpdateEntityScript.getUpdateScript(obj, f));
     }
 
-    public ArrayList<Object> getEntitiesWithProps(Object props, String... fields) throws OrmException,
+    public <T> ArrayList<T> getEntitiesWithProps(Class<T> tClass, T props, String... fields) throws OrmException,
             SQLException, IllegalAccessException {
-        if(!connManager.checkTableExists(props.getClass().getSimpleName().toLowerCase())){
+        if(!connManager.checkTableExists(props.getClass().getAnnotation(TableNameAnnotation.class).tableName().toLowerCase())){
             throw new ClassToTableMappingException("MappingError: Entity provided to insert" +
                     " entity is not a part of database");
         }
@@ -166,15 +168,15 @@ public class ORM {
                 }
             }
         }
-        return connManager.executeQuerySql(GetEntityScript.getEntitiesScript(props, f), props.getClass());
+        return connManager.executeQuerySql(GetEntityScript.getEntitiesScript(props, f), tClass);
     }
 
-    public Object getEntityByPk(Object obj) throws Exception {
-        if(!connManager.checkTableExists(obj.getClass().getSimpleName().toLowerCase())){
+    public <T> T getEntityByPk(Class<T> tClass, T obj) throws Exception {
+        if(!connManager.checkTableExists(obj.getClass().getAnnotation(TableNameAnnotation.class).tableName().toLowerCase())){
             throw new ClassToTableMappingException("MappingError(Insert): Entity's class" +
                     " is not a part of database");
         }
-        ArrayList<Object> objs = connManager.executeQuerySql(GetEntityScript.getEntityScript(obj), obj.getClass());
+        ArrayList<T> objs = connManager.executeQuerySql(GetEntityScript.getEntityScript(obj), tClass);
         if(objs.isEmpty()) return null;
         return objs.get(0);
     }

@@ -21,10 +21,10 @@ public class TypeConvertorJavaSQL {
         dict.put("String", "VARCHAR");
         dict.put("string", "VARCHAR");
         dict.put("boolean", "BOOLEAN");
-        dict.put("double", "DECIMAL");
-        dict.put("float", "DECIMAL");
-        dict.put("Double", "DECIMAL");
-        dict.put("Float", "DECIMAL");
+        dict.put("double", "double precision");
+        dict.put("float", "real");
+        dict.put("Double", "double precision");
+        dict.put("Float", "real");
         dict.put("LocalDateTime", "TIMESTAMP");
         dict.put("LocalDate", "DATE");
         dict.put("LocalTime", "TIME");

@@ -1,5 +1,6 @@
 package com.main.map_examen_sesiune.ORM.sql;
 
+import com.main.map_examen_sesiune.ORM.annotations.TableNameAnnotation;
 import com.main.map_examen_sesiune.ORM.classparser.FieldsParser;
 import com.main.map_examen_sesiune.ORM.exceptions.OrmException;
 
@@ -16,7 +17,8 @@ public class UpdateEntityScript {
         }
         HashMap<Integer, Object> result = new HashMap<>();
         int nextPlaceHolderIndex = 1;
-        StringBuilder script = new StringBuilder("UPDATE " + obj.getClass().getSimpleName().toLowerCase());
+        StringBuilder script = new StringBuilder("UPDATE " +
+                obj.getClass().getAnnotation(TableNameAnnotation.class).tableName().toLowerCase());
         script.append(" SET ");
         for(Field f: fields){
             script.append(f.getName().toLowerCase()).append("=?, ");

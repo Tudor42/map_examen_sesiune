@@ -1,5 +1,6 @@
 package com.main.map_examen_sesiune.ORM.sql;
 
+import com.main.map_examen_sesiune.ORM.annotations.TableNameAnnotation;
 import com.main.map_examen_sesiune.ORM.classparser.FieldsParser;
 import com.main.map_examen_sesiune.ORM.exceptions.OrmException;
 
@@ -12,7 +13,7 @@ public class DeleteEntityScript {
         HashMap<Integer, Object> result = new HashMap<>();
         int nextPlaceHolderIndex = 1;
         StringBuilder script = new StringBuilder("DELETE FROM " +
-                obj.getClass().getSimpleName().toLowerCase() +" WHERE ");
+                obj.getClass().getAnnotation(TableNameAnnotation.class).tableName().toLowerCase() +" WHERE ");
         ArrayList<Field> pks = FieldsParser.getPkFields(obj.getClass());
         for(Field f: pks){
             script.append(f.getName().toLowerCase()).append("=? AND ");

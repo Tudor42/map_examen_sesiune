@@ -1,5 +1,6 @@
 package com.main.map_examen_sesiune.ORM.sql;
 
+import com.main.map_examen_sesiune.ORM.annotations.TableNameAnnotation;
 import com.main.map_examen_sesiune.ORM.classparser.FieldsParser;
 import com.main.map_examen_sesiune.ORM.exceptions.OrmException;
 
@@ -18,7 +19,7 @@ public class GetEntityScript {
         HashMap<Integer, Object> result = new HashMap<>();
         int nextPlaceHolderIndex = 1;
         StringBuilder script = new StringBuilder("SELECT * FROM ");
-        script.append(props.getClass().getSimpleName().toLowerCase()).append(" WHERE ");
+        script.append(props.getClass().getAnnotation(TableNameAnnotation.class).tableName().toLowerCase()).append(" WHERE ");
         for(Field f: fields){
             script.append(f.getName().toLowerCase()).append("=? AND ");
         }

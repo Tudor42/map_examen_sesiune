@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ConnectionManager {
-    private String url;
+    public String url;
     private final String username;
     private final String password;
     private final String port;
@@ -74,16 +74,20 @@ public class ConnectionManager {
         }
     }
 
-    public ArrayList<Object> executeQuerySql(HashMap<Integer, Object> query, Class<?> cl) throws OrmException,
+    public <T> ArrayList<T> executeQuerySql(HashMap<Integer, Object> query, Class<T> cl) throws OrmException,
             SQLException, IllegalAccessException {
-        ArrayList<Object> objects = new ArrayList<>();
+        ArrayList<T> objects = new ArrayList<>();
         try(Connection connection = DriverManager.getConnection(url, username, password);
             PreparedStatement statement = connection.prepareStatement((String) query.get(0))){
             query.remove(0);
             completePlaceHolders(query, statement);
             try(ResultSet res = statement.executeQuery()){
                 while(res.next()){
-                    objects.add(ObjectResultSetConverter.convert(res, cl));
+                    try {
+                        objects.add(ObjectResultSetConverter.convert(res, cl));
+                    }catch (Exception e){
+                        e.printStackTrace();
+                    }
                 }
             }
         }

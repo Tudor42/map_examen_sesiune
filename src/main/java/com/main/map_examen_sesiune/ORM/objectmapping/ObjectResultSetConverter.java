@@ -11,8 +11,8 @@ import java.sql.*;
 import java.util.Arrays;
 
 public class ObjectResultSetConverter {
-    public static Object convert(ResultSet resultSet, Class<?> cl) throws ClassMethodsException, SQLException, IllegalAccessException {
-        Object o;
+    public static <T> T convert(ResultSet resultSet, Class<T> cl) throws ClassMethodsException, SQLException, IllegalAccessException {
+        T o;
         try {
             o = cl.getConstructor().newInstance();
         }catch (NoSuchMethodException | InstantiationException | InvocationTargetException | IllegalAccessException n){

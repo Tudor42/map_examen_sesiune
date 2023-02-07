@@ -1,5 +1,6 @@
 package com.main.map_examen_sesiune.ORM.sql;
 
+import com.main.map_examen_sesiune.ORM.annotations.TableNameAnnotation;
 import com.main.map_examen_sesiune.ORM.annotations.columntype.*;
 import com.main.map_examen_sesiune.ORM.classparser.FieldsParser;
 import com.main.map_examen_sesiune.ORM.exceptions.ClassFieldException;
@@ -12,7 +13,7 @@ import java.util.stream.Collectors;
 
 public class CreateTableWriter {
     public static String getScript(Class<?> cl) throws TypeConversionFailedException, ClassFieldException {
-        StringBuilder res = new StringBuilder("CREATE TABLE IF NOT EXISTS " + cl.getSimpleName() + "(");
+        StringBuilder res = new StringBuilder("CREATE TABLE " + cl.getAnnotation(TableNameAnnotation.class).tableName().toLowerCase() + "(");
         ArrayList<Field> pks = FieldsParser.getPkFields(cl);
         if(pks.size() < 1 || pks.size() > 2){
             throw new ClassFieldException("For class "+cl.getSimpleName()+" the primary key is not " +
@@ -44,7 +45,8 @@ public class CreateTableWriter {
     private static String foreignKeyString(Field field){
         ForeignKey an = field.getAnnotation(ForeignKey.class);
 
-        return "FOREIGN KEY (" + field.getName() + ") REFERENCES " + an.entity().getSimpleName() +
+        return "FOREIGN KEY (" + field.getName() + ") REFERENCES " + an.entity().
+                getAnnotation(TableNameAnnotation.class).tableName().toLowerCase() +
         "(" + an.referencedColumn() + ")"
                 + (an.ruleDelete() == FkRules.CASCADE?
                 " ON DELETE CASCADE ":
